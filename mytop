@@ -913,9 +913,15 @@ sub GetData()
 
     my @data = Hashes($proc_cmd);
 
+    my $max_id = 0;
+
     foreach my $thread (@data)
     {
         last if not $lines_left;
+
+        if ($max_id < $thread->{Id}) {
+            $max_id = $thread->{Id};
+        }
 
         ## Drop Domain Name, unless it looks like an IP address.  If
         ## it's an IP, we'll strip the port number because it's rarely
@@ -977,19 +983,20 @@ sub GetData()
 
     }
 
-    my @sz   = (9, 9, 15, 10, 9, 6);
+    my $max_id_size = length $max_id;
+    my @sz   = ($max_id_size, 9, 15, 10, 9, 6);
     my $used = scalar(@sz) + Sum(@sz);
     my $free = $width - $used;
 
     print BOLD();
 
-    printf "%8s %9s %15s %10s %9s %6s %-${free}s\n",
+    printf "%${max_id_size}s %9s %15s %10s %9s %6s %-${free}s\n",
         'Id','User','Host/IP','DB','Time', 'Cmd', 'Query or State';
 
     print RESET();
 
     ##      Id User Host DB
-    printf "%9s %9s %15s %10s %9s %6s %-${free}s\n",
+    printf "%${max_id_size}s %9s %15s %10s %9s %6s %-${free}s\n",
         '--','----','-------','--','----', '---', '----------';
 
     ## Sort by idle time (closest thing to CPU usage I can think of).
@@ -1046,7 +1053,7 @@ sub GetData()
             print GREEN()  if $thread->{Command} eq 'Connect';
         }
 
-        printf "%9d %9.9s %15.15s %10.10s %9d %6.6s %-${free}.${free}s\n",
+        printf "%${max_id_size}d %9.9s %15.15s %10.10s %9d %6.6s %-${free}.${free}s\n",
             $thread->{Id}, $thread->{User}, $thread->{Host}, $thread->{db},
             $thread->{Time}, $thread->{Command}, $smInfo;
 
